@@ -1,0 +1,40 @@
+ <?php
+/*
+Plugin Name: Lista Postów z Obrazkami
+Plugin URI: http://twojastrona.pl
+Description: Wtyczka dodaje listę z ich miniaturami i tytułami na końcu każdego posta.
+Version: 1.0
+Author: Bartosz 
+Author URI: http://bartoszchojnacki.com
+*/
+
+function lista_postow_z_obrazkami($content) {
+    if(is_single()) {
+        global $post;
+        $args = array(
+            'posts_per_page' => 5, // Liczba postów
+            'post__not_in' => array($post->ID), // Wyklucz bieżący post
+            'post_status' => 'publish', // Tylko opublikowane posty
+        );
+        $ostatnie_posty = new WP_Query($args);
+
+        if($ostatnie_posty->have_posts()) {
+            $content .= '<h3>Ostatnie Posty:</h3><ul style="list-style: none;">';
+            while($ostatnie_posty->have_posts()) {
+                $ostatnie_posty->the_post();
+                $content .= '<li style="margin-bottom: 10px; display: flex; align-items: center;">';
+                if(has_post_thumbnail()) {
+                    $content .= get_the_post_thumbnail($post->ID, 'thumbnail', array('style' => 'margin-right: 10px;'));
+                }
+                $content .= '<a href="' . get_permalink() . '">' . get_the_title() . '</a></li>';
+            }
+            $content .= '</ul>';
+            wp_reset_postdata(); // Reset globalnego obiektu post
+        }
+    }
+
+    return $content;
+}
+
+add_filter('the_content', 'lista_postow_z_obrazkami');
+?>
